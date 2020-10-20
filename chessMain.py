@@ -66,8 +66,11 @@ def main():
                         sqSelected = ()
                         playerCLicks = []
                         continue
+                    # we check the turns
+
                     # if there is a piece we select it
-                    if gs.board[row][col].getPiece() !=None:
+                    if gs.board[row][col].getPiece() !=None and \
+                                    gs.board[row][col].getPiece().isWhite()==gs.whiteToMove:
                         gs.board[row][col].getPiece().setSelected(True)
                     # we need to safe the square we choose in clicks
                     square = Square(row,col,gs.board[row][col].getPiece())
@@ -95,6 +98,9 @@ def main():
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z:
                     gs.undoMove()
+                    valid_moves = []
+                    sqSelected = ()
+                    playerCLicks = []
 
 
         #drawGameState(screen,gs)
