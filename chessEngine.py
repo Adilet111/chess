@@ -3,6 +3,12 @@ This class is responcible for storing all the information about current state. A
 of valid moves and keep move log
 """
 import abc
+from Piece_logic.Bishop import Bishop
+from Piece_logic.King import King
+from Piece_logic.Knight import Knight
+from Piece_logic.Pawn import Pawn
+from Piece_logic.Queen import Queen
+from Piece_logic.Rook import Rook
 
 
 def make_instance(cls, *arg) :
@@ -48,120 +54,6 @@ class Piece(metaclass=abc.ABCMeta) :
     @abc.abstractmethod
     def Info(self) :
         pass
-
-
-class Pawn(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        allowedMoves = []
-        r, c = start.getLocation()
-        direction = 0
-        if self.isWhite():
-            direction = -1
-        else:
-            direction = 1
-        if self.selected :
-            if board[r + direction][c].getPiece() is None :
-                allowedMoves.append(board[r + direction][c])
-            try :
-                if board[r + direction][c + 1].getPiece() != None and self.colorDifference(board[r + direction][c + 1].getPiece()) :
-                    allowedMoves.append(board[r + direction][c + 1])
-            except IndexError :
-                pass
-            try :
-                if board[r + direction][c - 1].getPiece() != None and self.colorDifference(board[r + direction][c - 1].getPiece()) :
-                    allowedMoves.append(board[r + direction][c - 1])
-            except IndexError :
-                pass
-            if board[r + 2*direction][c].getPiece() is None and self.firstMove :
-                allowedMoves.append(board[r + 2*direction][c])
-        return allowedMoves
-
-    def Info(self) :
-        return "I am pawn"
-
-
-class Rook(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        return []
-
-    def Info(self) :
-        return "I am rook"
-
-
-class Knight(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        allowedMoves = []
-        r, c = start.getLocation()
-        row_directions = [-2,2]
-        col_directions = [-1,1]
-        if self.selected:
-            for row in row_directions:
-                for col in col_directions:
-                    try :
-                        if r+row>= 0 and c +col >= 0:
-                            if board[r + row][c + col].getPiece() == None:
-                                allowedMoves.append(board[r + row][c + col])
-                            elif self.colorDifference(board[r +row][c + col].getPiece()):
-                                allowedMoves.append(board[r + row][c + col])
-                    except IndexError :
-                        pass
-            for row in col_directions:
-                for col in row_directions:
-                    try :
-                        if r + row >= 0 and c + col >= 0 :
-                            if board[r + row][c + col].getPiece() == None :
-                                allowedMoves.append(board[r + row][c + col])
-                            elif self.colorDifference(board[r + row][c + col].getPiece()) :
-                                allowedMoves.append(board[r + row][c + col])
-                    except IndexError :
-                        pass
-        return allowedMoves
-
-    def Info(self) :
-        return "I am knight"
-
-
-class Bishop(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        return []
-
-    def Info(self) :
-        return "I am bishop"
-
-
-class Queen(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        return []
-
-    def Info(self) :
-        return "I am Queen"
-
-
-class King(Piece) :
-    def __init__(self, type) :
-        super().__init__(type)
-
-    def canMove(self, board, start) :
-        return []
-
-    def Info(self) :
-        return "I am King"
-
 
 
 PIECES = {"wp" : Pawn, "wR" : Rook, "wN" : Knight, "wB" : Bishop, "wQ" : Queen, "wK" : King,

@@ -6,7 +6,7 @@ main drive file responsible for user input and displaying the current gameState 
 
 import pygame as p
 from chessEngine import *
-
+from drawingLogic import *
 
 WIDTH = HEIGHT = 512
 DIMENSION  = 8 # dimensions for board 8x8
@@ -27,6 +27,53 @@ def loadImage():
 '''
 main driver will handle user input and updating the graphics
 '''
+
+
+def manage_clicks(gs,r,c,sqSelected, playerClicks,valid_moves):
+
+    # if the same cell is clicked
+    if sqSelected == (r, c) :
+        if gs.board[r][c].getPiece() != None :
+            gs.board[r][c].getPiece().setSelected(False)
+            sqSelected = ()
+            playerClicks = []
+            valid_moves = []
+    # this is the first click of a mouse or a second click on different square
+    else :
+        sqSelected = r, c
+        # checking whether there is piece and is it a first click
+        # if it clicked on empty square and it is first click then we do not save it
+        if gs.board[r][c].getPiece() == None and len(playerClicks) == 0 :
+            sqSelected = ()
+            playerClicks = []
+        # we check the turns
+
+        # if there is a piece we select it
+        if gs.board[r][c].getPiece() != None and \
+                gs.board[r][c].getPiece().isWhite() == gs.whiteToMove :
+            gs.board[r][c].getPiece().setSelected(True)
+        # we need to safe the square we choose in clicks
+        square = Square(r, c, gs.board[r][c].getPiece())
+        playerClicks.append(square)
+    # if this is the second click and different from first
+    if len(playerClicks) == 2 :
+        # Check that first click is actually with piece on it (may be not necessary check)
+        if playerClicks[0].getPiece() != None :
+            playerClicks[0].getPiece().setSelected(False)
+        # We create move object
+        mv = Move(playerClicks[0], playerClicks[1])
+        print(mv.getChessNotation())
+        # check whether the end square in the valid moves, if yes the make move
+        if mv.endSq in valid_moves :
+            gs.move(mv)
+        valid_moves = []
+        playerClicks = []
+        sqSelected = ()
+    return sqSelected, playerClicks, valid_moves
+
+
+
+
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
@@ -48,49 +95,7 @@ def main():
                 location = p.mouse.get_pos() #(x,y) location of the mouse
                 col = location[0]//SQ_SIZE
                 row = location[1]//SQ_SIZE
-                #
-                if sqSelected == (row,col) :
-                    if gs.board[row][col].getPiece()!=None:
-                        gs.board[row][col].getPiece().setSelected(False)
-                        sqSelected = ()
-                        playerCLicks = []
-                        valid_moves = []
-                    else:
-                        continue
-                #this is the first click of a mouse or a second click on different square
-                else:
-                    sqSelected = row,col
-                    # checking whether there is piece and is it a first click
-                    #if it clicked on empty square and it is first click then we do not save it
-                    if gs.board[row][col].getPiece() == None and len(playerCLicks)==0:
-                        sqSelected = ()
-                        playerCLicks = []
-                        continue
-                    # we check the turns
-
-                    # if there is a piece we select it
-                    if gs.board[row][col].getPiece() !=None and \
-                                    gs.board[row][col].getPiece().isWhite()==gs.whiteToMove:
-                        gs.board[row][col].getPiece().setSelected(True)
-                    # we need to safe the square we choose in clicks
-                    square = Square(row,col,gs.board[row][col].getPiece())
-                    playerCLicks.append(square)
-                # if this is the second click and different from first
-                if len(playerCLicks)==2:
-                    #Check that first click is actually with piece on it (may be not necessary check)
-                    if playerCLicks[0].getPiece()!=None:
-                        playerCLicks[0].getPiece().setSelected(False)
-                    #We create move object
-                    mv = Move(playerCLicks[0],playerCLicks[1])
-                    print(mv.getChessNotation())
-                    #check whether the end square in the valid moves, if yes the make move
-                    if mv.endSq in valid_moves:
-                        gs.move(mv)
-                    valid_moves = []
-                    playerCLicks = []
-                    sqSelected = ()
-
-
+                sqSelected, playerCLicks, valid_moves = manage_clicks(gs,row,col,sqSelected,playerCLicks,valid_moves)
                 #here we generate valid moves when clicked on the square with some Piece
                 if  gs.board[row][col].getPiece() != None and gs.board[row][col].getPiece().isSelected():
                     selected_piece = gs.board[row][col].getPiece()
@@ -105,57 +110,9 @@ def main():
 
         #drawGameState(screen,gs)
         drawBoard(screen,valid_moves)
-        drawPieces(screen, gs.board)
+        drawPieces(screen, gs.board, IMAGES)
         clock.tick(MAX_FPS)
         p.display.flip()
-'''
-Responsible for all the graphics
-'''
-def drawGameState(screen,gs):
-    drawBoard(screen) #draw squares on the board
-    drawPieces(screen, gs.board) #draw pieces on top of those squares
-
-
-
-def drawBordersForValidMoves(screen,valid_moves):
-    BLACK = (0,0,0)
-    for move in valid_moves:
-        p.draw.lines(screen, BLACK, True, [(move.y*SQ_SIZE,move.x*SQ_SIZE),\
-                                           (move.y*SQ_SIZE,move.x*SQ_SIZE+SQ_SIZE),\
-                                           (move.y*SQ_SIZE+SQ_SIZE,move.x*SQ_SIZE+SQ_SIZE),\
-                                           (move.y*SQ_SIZE+SQ_SIZE,move.x*SQ_SIZE)],4)
-
-'''
-Draw the squares
-'''
-
-def drawBoard(screen,valid_moves):
-    WHITE = (255,255,255)
-    GREY  = (90, 102, 93)
-
-    for j in range (8):
-        for i in range(8):
-            if (i+j)%2 == 0:
-                p.draw.rect(screen, WHITE, p.Rect(i*SQ_SIZE, j*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-            else:
-                p.draw.rect(screen, GREY, p.Rect(i*SQ_SIZE, j*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-    for move in valid_moves:
-        p.draw.rect(screen, (245, 236, 113), p.Rect(move.y * SQ_SIZE, move.x * SQ_SIZE, SQ_SIZE, SQ_SIZE))
-    drawBordersForValidMoves(screen, valid_moves)
-
-'''
-Draw the pieces on the board using the current GameState.board
-'''
-def drawPieces(screen,board):
-    for j,row in enumerate(range(len(board))):
-        for i,sq in enumerate(board[j]):
-            if (sq.getPiece() == None):
-                continue
-            else:
-
-                pi = sq.getPiece()
-                img = pi.getType()[0]
-                screen.blit(IMAGES[img], p.Rect(i*SQ_SIZE, j*SQ_SIZE,SQ_SIZE,SQ_SIZE))
 
 if __name__ == "__main__":
     main()
